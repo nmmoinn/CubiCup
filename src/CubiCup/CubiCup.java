@@ -7,6 +7,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.io.BufferedWriter;
+import java.util.ArrayList;
+
 public class CubiCup {
 
     private final int EMPTY = -2;
@@ -32,6 +35,8 @@ public class CubiCup {
     int BoxSideLength = 20;
 
     Boolean gameOver = false;
+
+    ArrayList<BufferedWriter> engineOutputs;
 
     public CubiCup(Pane gamePane, int size) {
 
@@ -153,8 +158,22 @@ public class CubiCup {
         updateCounters();
         checkForEnd();
 
+        for( BufferedWriter engineOutput : engineOutputs ) {
+            try {
+                engineOutput.write(x + "," + y + "," + z);
+                engineOutput.newLine();
+                engineOutput.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         //System.out.println( "P1  P2" );
         //System.out.println( pieces[BLUE] + "  " + pieces[GREEN] );
+    }
+
+    public void setEngineOutputs( ArrayList<BufferedWriter> outputs ) {
+        engineOutputs = outputs;
     }
 
     private void checkForEnd() {

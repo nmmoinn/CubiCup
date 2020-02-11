@@ -2,9 +2,14 @@ package CubiCup;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
+import java.io.BufferedWriter;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class Controller {
@@ -13,15 +18,59 @@ public class Controller {
     private Pane gamePane;
     private CubiCup game;
 
+    @FXML
+    VBox sidePane;
+
+    ArrayList<BufferedWriter> engineOutputs = new ArrayList<>();
+    ArrayList<Process> engineProcesses = new ArrayList<>();
+
     private int gameSize = 4;
+
+    private Stage primaryStage;
 
     public void initialize() {
 
-        newGame();
+        startNewGame();
 
+        initSidePanel();
     }
 
-    public void newGame() {
+    public void setPrimaryStage( Stage stage ) {
+
+        primaryStage = stage;
+
+        primaryStage.setOnCloseRequest( e -> {
+            for( Process engineProcess : engineProcesses ) {
+                engineProcess.destroy();
+                //System.out.println("killing process " + i);
+            }
+        });
+    }
+
+    public void initSidePanel() {
+
+        Button butt = new Button("+");
+        butt.setMaxWidth(3e8);
+
+        butt.setOnAction( event -> {
+
+            try {
+                EngineDisplay eng = new EngineDisplay();
+                int pos = sidePane.getChildren().size() - 1 ;
+
+                sidePane.getChildren().add(pos,eng.getDropDown());
+                eng.getDropDown().setExpanded(true);
+                engineOutputs.add(eng.getOutputStream());
+                engineProcesses.add(eng.getEngineProcess());
+            } catch( Exception e ) {
+                System.out.println(e.getMessage());
+            }
+        });
+
+        sidePane.getChildren().add( butt );
+    }
+
+    public void startNewGame() {
 
         int gameSize;
         Optional<String> result;
@@ -35,7 +84,7 @@ public class Controller {
 
             result = sizeInput.showAndWait();
 
-            if( !result.isPresent() ) {
+            if( result.isEmpty() ) {
                 if( game == null ) {
                     Platform.exit();
                 }
@@ -53,6 +102,7 @@ public class Controller {
                 } else {
                     this.gameSize = gameSize;
                     game = new CubiCup(gamePane,gameSize);
+                    game.setEngineOutputs(engineOutputs);
                     break;
                 }
             } catch (Exception e) {
@@ -67,6 +117,7 @@ public class Controller {
 
     public void reset() {
         game = new CubiCup(gamePane,gameSize);
+        game.setEngineOutputs(engineOutputs);
     }
 
     public void exit() {

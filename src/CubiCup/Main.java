@@ -10,13 +10,20 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("MainWindow.fxml"));
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
+
+        Parent root = loader.load();
         primaryStage.setTitle("CubiCup");
         primaryStage.setScene(new Scene(root, 1024, 850));
         primaryStage.show();
 
         primaryStage.setMinHeight(500);
         primaryStage.setMinWidth(500);
+
+        Controller controller = loader.getController();
+        controller.setPrimaryStage(primaryStage);
+
     }
 
 
