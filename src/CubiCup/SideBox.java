@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 
-public class SideBox extends Node {
+public class SideBox {
 
     Box boxXU;
     Box boxXD;

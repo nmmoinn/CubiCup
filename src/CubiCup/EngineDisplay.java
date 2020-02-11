@@ -80,11 +80,11 @@ public class EngineDisplay {
         return p;
     }
 
-    Service<Void> runMain = new Service<>() {
+    Service<Void> runMain = new Service<Void>() {
         @Override
         protected Task<Void> createTask() {
 
-            return new Task<>() {
+            return new Task<Void>() {
                 String line;
 
                 @Override

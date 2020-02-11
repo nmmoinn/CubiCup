@@ -84,7 +84,7 @@ public class Controller {
 
             result = sizeInput.showAndWait();
 
-            if( result.isEmpty() ) {
+            if( !result.isPresent() ) {
                 if( game == null ) {
                     Platform.exit();
                 }
