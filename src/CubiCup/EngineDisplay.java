@@ -3,27 +3,38 @@ package CubiCup;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class EngineDisplay {
 
     private TitledPane dropDownName = new TitledPane();
 
     private VBox engineOutput = new VBox();
-    private String[] valueNames = { "Value1", "Value2" };
-    private Text[] values;
 
-    private Process p;
-    BufferedReader reader;
-    BufferedWriter output;
+    private ArrayList<String> valueNames = new ArrayList<String>();
+    private ArrayList<Text> values = new ArrayList<Text>();
 
-    File engineFile;
+    private Process process;
+    private BufferedReader reader;
+    private BufferedWriter output;
+
+    private File engineFile;
+
+    private HBox buttonBox = new HBox();
+    private Button close = new Button("X");
+    private Button reset = new Button("Reset");
+
+    private String[] cmd;
 
     public EngineDisplay() throws Exception {
 
@@ -36,17 +47,14 @@ public class EngineDisplay {
 
         engineFile = file;
 
-        values = new Text[valueNames.length];
-        for( int i = 0; i < valueNames.length; i++ ) {
-            //System.out.println("adding value for " + i);
-            values[i] = new Text(valueNames[i] + ": ");
-            engineOutput.getChildren().add(values[i]);
-        }
-
         dropDownName.setContent(engineOutput);
 
+        reset.setOnAction( event -> reset() );
+
+        buttonBox.getChildren().addAll(close,reset);
+        engineOutput.getChildren().add( buttonBox );
+
         String engineFileName = engineFile.getName();
-        String[] cmd;
 
         if ( engineFileName.contains(".") && engineFileName.substring(engineFileName.lastIndexOf(".")).equals(".bash")) {
             cmd = new String[]{ "bash", engineFile.getPath() };
@@ -58,10 +66,10 @@ public class EngineDisplay {
 
         dropDownName.setText(engineFile.getName());
 
-        p = Runtime.getRuntime().exec(cmd);
+        process = Runtime.getRuntime().exec(cmd);
 
-        reader = new BufferedReader( new InputStreamReader( p.getInputStream() ) );
-        output = new BufferedWriter( new OutputStreamWriter( p.getOutputStream() ) );
+        reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
+        output = new BufferedWriter( new OutputStreamWriter( process.getOutputStream() ) );
 
         runMain.start();
     }
@@ -71,13 +79,48 @@ public class EngineDisplay {
     }
 
     public BufferedWriter getOutputStream() {
-
         return output;
     }
 
     public Process getEngineProcess() {
+        return process;
+    }
 
-        return p;
+    public Button closeButton() {
+        return close;
+    }
+
+    public Button resetButton() {
+        return reset;
+    }
+
+    public void kill() {
+        process.destroy();
+    }
+
+    public void reset() {
+
+        process.destroy();
+
+        try {
+
+            process = Runtime.getRuntime().exec(cmd);
+
+            valueNames.clear();
+            values.clear();
+
+            engineOutput.getChildren().clear();
+            engineOutput.getChildren().add( buttonBox );
+
+            reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
+            output = new BufferedWriter( new OutputStreamWriter( process.getOutputStream() ) );
+
+            runMain.restart();
+
+        } catch( Exception e ) {
+            System.out.println("Error resetting process for " + engineFile.getName() );
+            e.printStackTrace();
+        }
     }
 
     Service<Void> runMain = new Service<Void>() {
@@ -91,7 +134,7 @@ public class EngineDisplay {
                 protected Void call() {
                     try {
 
-                        while (p.isAlive()) {
+                        while (process.isAlive()) {
 
                             line = reader.readLine();
 
@@ -102,11 +145,20 @@ public class EngineDisplay {
                                 //System.out.println(lineSplit[0]);
                                 //System.out.println(lineSplit[1]);
 
-                                for (int i = 0; i < valueNames.length; i++) {
+                                if( lineSplit[0].equals("subscribe") ) {
+                                    valueNames.add( lineSplit[1] );
+                                    Text newText = new Text( lineSplit[1] + ": " );
+                                    values.add( newText );
+                                    Platform.runLater(() -> {
+                                        engineOutput.getChildren().add(engineOutput.getChildren().size()-1,newText);
+                                    });
+                                }
+
+                                for (int i = 0; i < valueNames.size(); i++) {
                                     int counter = i;
-                                    if (lineSplit[0].equals(valueNames[i])) {
+                                    if (lineSplit[0].equals(valueNames.get(i))) {
                                         Platform.runLater(() -> {
-                                            values[counter].setText(valueNames[counter] + ": " + lineSplit[1]);
+                                            values.get(counter).setText(valueNames.get(counter) + ": " + lineSplit[1]);
                                         });
                                     }
                                 }

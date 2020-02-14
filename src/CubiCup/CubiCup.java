@@ -1,5 +1,6 @@
 package CubiCup;
 
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -37,6 +38,8 @@ public class CubiCup {
     Boolean gameOver = false;
 
     ArrayList<BufferedWriter> engineOutputs;
+
+    Label spotHover = new Label();
 
     public CubiCup(Pane gamePane, int size) {
 
@@ -122,6 +125,10 @@ public class CubiCup {
         greenCounter.setText(""+pieces[GREEN]);
     }
 
+    public void setSpotHoverLabel( Label label ) {
+        spotHover = label;
+    }
+
     private void takeTurn( int x, int y, int z ) {
 
         //System.out.println(x + " , " + y + " , " + z);
@@ -160,7 +167,7 @@ public class CubiCup {
 
         for( BufferedWriter engineOutput : engineOutputs ) {
             try {
-                engineOutput.write(x + "," + y + "," + z);
+                engineOutput.write("move:" + x + "," + y + "," + z);
                 engineOutput.newLine();
                 engineOutput.flush();
             } catch (Exception e) {
@@ -290,10 +297,13 @@ public class CubiCup {
         box.addToGroup(display.getRoot());
 
         box.boxXU.setOnMousePressed( event -> this.takeTurn(x-1, y, z ));
+        box.boxXU.hoverProperty().addListener( event -> updateLabel(x-1,y,z) );
 
         box.boxYU.setOnMousePressed( event -> this.takeTurn(x, y-1, z ));
+        box.boxYU.hoverProperty().addListener( event -> updateLabel(x,y-1,z) );
 
         box.boxZU.setOnMousePressed( event -> this.takeTurn(x, y, z-1 ));
+        box.boxZU.hoverProperty().addListener( event -> updateLabel(x,y,z-1) );
     }
 
     private void drawBase( int  size ) {
@@ -308,6 +318,13 @@ public class CubiCup {
 
     }
 
+    private void updateLabel( int x, int y, int z ) {
 
+        if( x < 0 || y < 0 || z < 0 ) {
+            spotHover.setText("");
+        } else {
+            spotHover.setText("Mouse Over: " + x + "," +  y + "," + z);
+        }
+    }
 
 }
